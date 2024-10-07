@@ -1,0 +1,184 @@
+import java.awt.Point;  
+import java.util.Scanner;  
+
+public class Practical2  
+{
+    static String[][] cipherTable(String keyword)  
+    {     
+        String[][] playfairTable = new String[5][5];  
+        String keyString = keyword + "ABCDEFGHIKLMNOPQRSTUVWXYZ";  
+        for(int i=0; i<5; i++)  
+            for(int j=0; j<5; j++)  
+                playfairTable[i][j] = "";          
+        for(int k=0; k<keyString.length(); k++)  
+        {  
+            boolean repeat = false;  
+            boolean used = false;  
+            for(int i=0; i<5; i++)  
+            {  
+                for(int j=0; j<5; j++)  
+                {  
+                    if(playfairTable[i][j].equals("" + keyString.charAt(k)))  
+                    {  
+                        repeat = true;  
+                    }  
+                    else if(playfairTable[i][j].equals("") && !repeat && !used)  
+                    {  
+                        playfairTable[i][j] = "" + keyString.charAt(k);  
+                        used = true;  
+                    }  
+                }  
+            }  
+        }  
+        return playfairTable;  
+    }  
+
+    static String encryptData(String plainText, String[][] playfairTable)  
+    {   
+        for (int i=0; i<plainText.length()-1; i+=2)  
+        {  
+            if (plainText.charAt(i) == plainText.charAt(i+1))  
+            {  
+                plainText = new StringBuffer(plainText).insert(i+1, 'X').toString();  
+            }  
+        }  
+        if(plainText.length()%2 == 1)
+        {      
+            plainText = plainText + "X";
+        } 
+        String cipherText = "";        
+        for(int i=0; i<plainText.length()-1; i+=2)  
+        {  
+            char a = plainText.charAt(i);  
+            char b = plainText.charAt(i+1);  
+            int r1 = (int) getPoint(a, playfairTable).getX();  
+            int r2 = (int) getPoint(b, playfairTable).getX();  
+            int c1 = (int) getPoint(a, playfairTable).getY();  
+            int c2 = (int) getPoint(b, playfairTable).getY();    
+            if(r1==r2)  
+            {  
+                c1 = (c1+1) % 5;  
+                c2 = (c2+1) % 5;  
+            }  
+            else if(c1==c2)  
+            {  
+                r1 = (r1+1) % 5;  
+                r2 = (r2+1) % 5;  
+            }    
+            else  
+            {  
+                int temp = c1;  
+                c1 = c2;  
+                c2 = temp;  
+            }    
+            cipherText  = cipherText + playfairTable[r1][c1] + playfairTable[r2][c2];  
+        }
+        return cipherText;  
+    }
+  
+    static String decryptData(String cipherText, String[][] playfairTable)  
+    {  
+        String plainText = "";  
+        for(int i=0; i<cipherText.length()-1; i+=2)  
+        {  
+            char a = cipherText.charAt(i);  
+            char b = cipherText.charAt(i+1);  
+            int r1 = (int) getPoint(a, playfairTable).getX();  
+            int r2 = (int) getPoint(b, playfairTable).getX(); 
+            int c1 = (int) getPoint(a, playfairTable).getY();  
+            int c2 = (int) getPoint(b, playfairTable).getY();              
+            if(r1==r2)  
+            {  
+                c1 = (c1+4) % 5;  
+                c2 = (c2+4) % 5;  
+            }  
+            else if(c1==c2)  
+            {  
+                r1 = (r1+4) % 5;  
+                r2 = (r2+4) % 5;  
+            }  
+            else  
+            {  
+                //swapping logic      
+                int temp = c1;  
+                c1 = c2;  
+                c2 = temp;  
+            }  
+            plainText = plainText + playfairTable[r1][c1] + playfairTable[r2][c2];  
+        }    
+        return plainText;  
+    }
+  
+    private static Point getPoint(char c, String[][] table)  
+    {  
+        Point pt = new Point(0,0);  
+        for(int i=0; i<5; i++)  
+            for(int j=0; j<5; j++)  
+                if(c==table[i][j].charAt(0))  
+                    pt = new Point(i,j);  
+        return pt;  
+    }  
+
+    private static void keyTable(String[][] printTable)  
+    {  
+        System.out.println("Playfair Cipher Key Matrix: ");  
+        System.out.println();  
+        for(int i=0; i<5; i++)  
+        {  
+            for(int j=0; j<5; j++)  
+            {  
+                System.out.print(printTable[i][j]+" ");  
+            }  
+            System.out.println();  
+        }  
+        System.out.println();  
+    }    
+
+    public static void main(String[] args)   
+    {
+        int choice;
+        String plainText, cipherText, keyword, playfairTable[][];
+        Scanner sc = new Scanner(System.in);
+        do
+        {         
+            System.out.println("\n\n**********PLAYFAIR CIPHER ALGORITHM IMPLEMENTATION**********");  
+            System.out.println("============================================================");
+            System.out.println("1. Encrypt a text");
+            System.out.println("2. Decrypt a text");   
+            System.out.println("0. Exit \n");
+            System.out.print("Enter your choice: ");
+            choice = sc.nextInt();
+            sc.nextLine();
+            switch(choice)
+            {
+                case 1: 
+                    System.out.print("Enter plain text: ");
+                    plainText = sc.nextLine().replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+                    System.out.print("Enter keyword: ");
+                    keyword = sc.nextLine().replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+                    playfairTable = cipherTable(keyword);
+                    cipherText = encryptData(plainText, playfairTable);
+                    keyTable(playfairTable);  
+                    System.out.println("Cipher text: " + cipherText);
+                    
+                    break;
+                case 2:
+                    System.out.print("Enter cipher text: ");
+                    cipherText = sc.nextLine().replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+                    System.out.print("Enter keyword: ");
+                    keyword = sc.nextLine().replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+                    playfairTable = cipherTable(keyword); 
+                    plainText = decryptData(cipherText, playfairTable); 
+                    keyTable(playfairTable);
+                    System.out.println("Plain text: " + plainText);
+                    break;
+                case 0:
+                    System.out.println("\n\n");
+                    break;
+                default:
+                    System.out.println("INVALID CHOICE");
+            }
+        } while (choice!=0);
+        sc.close();
+    }
+}
